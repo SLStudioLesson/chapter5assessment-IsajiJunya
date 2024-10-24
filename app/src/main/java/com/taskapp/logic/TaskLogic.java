@@ -1,10 +1,15 @@
 package com.taskapp.logic;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.taskapp.dataaccess.LogDataAccess;
 import com.taskapp.dataaccess.TaskDataAccess;
 import com.taskapp.dataaccess.UserDataAccess;
+import com.taskapp.exception.AppException;
+import com.taskapp.model.Log;
 import com.taskapp.model.Task;
 import com.taskapp.model.User;
 
@@ -77,9 +82,19 @@ public class TaskLogic {
      * @param loginUser ログインユーザー
      * @throws AppException ユーザーコードが存在しない場合にスローされます
      */
-    // public void save(int code, String name, int repUserCode,
-    //                 User loginUser) throws AppException {
-    // }
+    public void save(int code, String name, int repUserCode,
+                    User loginUser) throws AppException {
+
+        User repUser = userDataAccess.findByCode(repUserCode);
+        if(repUser == null){
+            throw new AppException("存在するユーザーを入力してください");
+        }
+        Task task = new Task(code, name, 0, repUser);
+        taskDataAccess.save(task);
+        Log log = new Log(code, loginUser.getCode(), 0, LocalDate.now());
+        logDataAccess.save(log);
+        System.out.println(name + "の登録が完了しました。");
+    }
 
     /**
      * タスクのステータスを変更します。
@@ -92,9 +107,21 @@ public class TaskLogic {
      * @param loginUser ログインユーザー
      * @throws AppException タスクコードが存在しない、またはステータスが前のステータスより1つ先でない場合にスローされます
      */
-    // public void changeStatus(int code, int status,
-    //                         User loginUser) throws AppException {
-    // }
+    public void changeStatus(int code, int status,
+                            User loginUser) throws AppException {
+        Task task = taskDataAccess.findByCode(code);
+        if(task == null){
+            throw new AppException("存在するタスクコードを入力してください");
+        }
+        int nowStatas = task.getStatus();
+        if((nowStatas == 0 && status != 1) || (nowStatas == 1 && status != 2)){
+            throw new AppException("ステータスは、前のステータスより1つ先のもののみを選択してください");
+        }
+        task.setStatus(status);
+        taskDataAccess.update(task);
+        logDataAccess.save(new Log(code, loginUser.getCode(), status, LocalDate.now()));
+        
+    }
 
     /**
      * タスクを削除します。
