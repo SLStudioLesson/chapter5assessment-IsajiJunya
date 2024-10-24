@@ -99,23 +99,41 @@ public class TaskDataAccess {
         Task task = null;
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
+            // ヘッダー行をスキップ
             reader.readLine();
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split(",");
-                int codenum = Integer.parseInt(values[0]);
-                String name = values[1];
-                int status = Integer.parseInt(values[2]);
-                int repUserCodeValue = Integer.parseInt(values[3]);
-                User repUserCode = userDataAccess.findByCode(repUserCodeValue);
-                task = new Task(codenum, name, status, repUserCode);
-                break;
+                if (values.length != 4) {
+                    // 無効な行をスキップ
+                    continue;
+                }
+                try {
+                    int codenum = Integer.parseInt(values[0]);
+                    if (codenum == code) {
+                        String name = values[1];
+                        int status = Integer.parseInt(values[2]);
+                        int repUserCodeValue = Integer.parseInt(values[3]);
+                        User repUser = userDataAccess.findByCode(repUserCodeValue);
+                        
+                        task = new Task(codenum, name, status, repUser);
+                        break; // 一致するタスクが見つかったのでループを終了
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("数値形式のエラーが発生しました: " + e.getMessage());
+                }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+    
+        // タスクが見つからなかった場合のログ
+        // if (task == null) {
+        
+        // }
+    
         return task;
     }
+    
 
     /**
      * タスクデータを更新します。
@@ -125,6 +143,7 @@ public class TaskDataAccess {
         List<Task> tasks = findAll();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             writer.write("Code,Name,Status,Rep_User_Code");
+            writer.newLine();
             String line;
             for(Task task : tasks){
                 if(task.getCode() == updateTask.getCode()){

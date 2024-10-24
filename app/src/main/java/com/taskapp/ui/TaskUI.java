@@ -194,41 +194,40 @@ public class TaskUI {
      */
     public void inputChangeInformation() {
         boolean flg = true;
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))){
-            while (flg) {
+        while (flg) {
+            try {
                 System.out.println("ステータスを変更するタスクコードを入力してください：");
                 String taskCode = reader.readLine();
-                if(!isNumeric(taskCode)){
+                if (!isNumeric(taskCode)) {
                     System.out.println("コードは半角の数字で入力してください");
                     continue;
                 }
+    
                 System.out.println("どのステータスに変更をするか選択してください。");
                 System.out.println("1. 着手中, 2. 完了");
                 String select = reader.readLine();
-                if(!isNumeric(select)){
+                if (!isNumeric(select)) {
                     System.out.println("ステータスは半角の数字で入力してください");
                     continue;
                 }
-                switch (select) {
-                    case "1":
-                        taskLogic.changeStatus(Integer.parseInt(taskCode), Integer.parseInt(select), loginUser);
-                        break;
-                    case "2":
-                        taskLogic.changeStatus(Integer.parseInt(taskCode), Integer.parseInt(select), loginUser);
-                        break;
-                    default:
-                        System.out.println("ステータスは1・2の中から選択してください");
-                        break;
+    
+                int status = Integer.parseInt(select);
+                if (status == 1 || status == 2) {
+                    taskLogic.changeStatus(Integer.parseInt(taskCode), status, loginUser);
+                    System.out.println("タスクのステータスが変更されました。");
+                    flg = false; // 変更成功後はループを抜ける
+                } else {
+                    System.out.println("ステータスは1・2の中から選択してください");
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (AppException e) {
+                System.out.println(e.getMessage());
             }
-        }catch(IOException e){
-            e.printStackTrace();
-        }catch(AppException e){
-            System.out.println(e.getMessage());
         }
-
-        
     }
+    
+    
 
     /**
      * ユーザーからのタスク削除情報を受け取り、タスクを削除します。

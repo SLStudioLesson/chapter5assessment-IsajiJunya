@@ -45,20 +45,34 @@ public class TaskLogic {
      */
     public void showAll(User loginUser) {
         List<Task> tasks = taskDataAccess.findAll();
-
+    
+        // タスクが存在しない場合のメッセージ
+        if (tasks.isEmpty()) {
+            System.out.println("現在、タスクはありません。");
+            return;
+        }
+    
         tasks.forEach(task -> {
             String status;
-            if (task.getStatus() == 2) {
-                status = "完了";
-            } else if (task.getStatus() == 1) {
-                status = "着手中";
-            } else {
-                status = "未着手";
+            switch (task.getStatus()) {
+                case 2:
+                    status = "完了";
+                    break;
+                case 1:
+                    status = "着手中";
+                    break;
+                default:
+                    status = "未着手";
+                    break;
             }
             
             User repUser = task.getRepUser();
             String repUserName;
-            if (repUser.getCode() == loginUser.getCode()) {
+    
+            // repUserがnullでないか確認
+            if (repUser == null) {
+                repUserName = "担当者不明"; // 担当者が不明な場合の処理
+            } else if (repUser.getCode() == loginUser.getCode()) {
                 repUserName = "あなたが担当しています";
             } else {
                 repUserName = repUser.getName() + "が担当しています"; // 担当者の名前を表示
@@ -69,6 +83,7 @@ public class TaskLogic {
                     + repUserName + ", ステータス : " + status);
         });
     }
+    
 
     /**
      * 新しいタスクを保存します。
